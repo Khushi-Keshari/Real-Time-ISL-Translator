@@ -1,151 +1,267 @@
 
+# Real-Time ISL Translator
 
-## 📹 Sign Language to Speech — Real-Time System
+A real-time Indian Sign Language (ISL) translator that uses a webcam to recognize sign language gestures and convert them into text and speech.
 
-A real-time **Indian Sign Language (ISL)** to **Speech** system that combines **YOLO**, **MediaPipe**, and a custom **CNN+LSTM** model to translate sign language videos into spoken words.
+## About the Project
 
----
+This project is designed to recognize Indian Sign Language gestures from a live webcam feed.
 
-###  **Project Overview**
+The system processes the video frames, detects the person, extracts hand, face, and body landmarks, and then uses a CNN-LSTM model to predict the sign.
 
-This project enables real-time sign language recognition from webcam video and converts it to spoken text in the browser.
+The overall workflow is:
 
-**Key Highlights:**
+```text
+Webcam
+   ↓
+YOLOv11
+   ↓
+MediaPipe Holistic
+   ↓
+Landmark Extraction
+   ↓
+CNN + LSTM
+   ↓
+Sign Prediction
+   ↓
+Text
+   ↓
+Speech
+```
 
-* Real-time webcam capture in the browser.
-* Landmark extraction with **MediaPipe Holistic**.
-* **YOLOv11** for robust person detection and frame cropping during training.
-* Sequence modeling with a hybrid **CNN + LSTM** PyTorch model.
-* Interactive web interface with WebSocket-based streaming.
-* Automatic speech output using browser **Text-to-Speech (TTS)**.
+## Features
 
----
+* Real-time sign recognition using a webcam
+* Indian Sign Language gesture recognition
+* YOLOv11 for person detection
+* MediaPipe Holistic for landmark extraction
+* CNN-LSTM based sign classification
+* FastAPI backend
+* WebSocket-based real-time communication
+* Text-to-Speech output
 
-## ⚙️ **Training Pipeline**
+## Technologies Used
 
-> **How the model was built**
+| Technology          | Purpose                   |
+| ------------------- | ------------------------- |
+| Python              | Main programming language |
+| PyTorch             | Deep learning             |
+| YOLOv11             | Person detection          |
+| MediaPipe Holistic  | Landmark extraction       |
+| CNN                 | Feature extraction        |
+| LSTM                | Sequence processing       |
+| FastAPI             | Backend server            |
+| WebSockets          | Real-time communication   |
+| HTML/CSS/JavaScript | Frontend                  |
+| Web Speech API      | Text-to-Speech            |
 
-1. **Collect Videos:**
+## How It Works
 
-* Raw videos of sign language gestures.
+### 1. Webcam Input
 
-2. **Extract Frames:**
+The webcam captures the sign language performed by the user.
 
-* Videos are split into frame sequences for processing.
+### 2. Person Detection
 
-3. **YOLOv11 Detection:**
+YOLOv11 is used to detect the person in the video frame and obtain the required region for further processing.
 
-* Each frame is passed through **YOLOv11** to detect and crop the region containing the signer.
-* This improves landmark extraction accuracy by focusing only on the signer.
+### 3. Landmark Extraction
 
-4. **Extract Landmarks:**
+MediaPipe Holistic extracts landmarks from the detected person.
 
-* **MediaPipe Holistic** is used to extract:
+The extracted landmarks include:
 
-  * **Pose landmarks**
-  * **Face landmarks**
-  * **Left & right hand landmarks**
+* Face landmarks
+* Left-hand landmarks
+* Right-hand landmarks
+* Pose landmarks
 
-5. **Masking:**
+### 4. Sequence Creation
 
-* Binary masks track which landmarks are present/missing per frame.
-* This helps the model learn variable-length, partially visible features robustly.
+Landmarks from consecutive frames are collected into a sequence.
 
-6. **CNN + LSTM Model:**
+Using a sequence instead of a single frame helps the model understand the movement involved in a sign.
 
-* **CNN layers** learn spatial features from the landmark sequences.
-* **LSTM layers** capture temporal dependencies across frames.
-* The final model classifies the sign gesture into one of the predefined sign classes.
+### 5. CNN-LSTM Model
 
----
+The landmark sequence is passed to the CNN-LSTM model.
 
-## 🌐 **Web App Inference Pipeline**
+The CNN extracts useful features from the landmark data, while the LSTM processes the sequence and captures temporal information.
 
-> **How real-time recognition works**
+### 6. Sign Prediction
 
-1. **User starts the camera** from the browser.
-2. Frames are processed **client-side** with **MediaPipe Holistic** to draw pose, face, and hand landmarks for live feedback.
-3. The raw frame is also sent over **WebSocket** to the FastAPI backend.
-4. The server:
+After processing the required number of frames, the model predicts the corresponding sign.
 
-* Optionally runs YOLO crop (can be skipped).
-* Runs **MediaPipe Holistic** again on the cropped/received frame.
-* Maintains a **rolling buffer** (`deque`) of landmark sequences.
-  5. When the user presses `s`:
-* The buffer is **RESET** and inference is **STARTED**.
-* When enough frames are collected, the server feeds the landmark sequence through the **CNN + LSTM** model.
-  6. The predicted sign word is sent back to the browser in real-time.
-  7. The browser displays the word and can **speak it aloud** using the Web Speech API.
+The prediction is then sent to the web application.
 
----
+### 7. Text and Speech
 
-##  **How to Run**
+The predicted sign is displayed as text. The text can also be converted into speech using the browser's Text-to-Speech functionality.
 
-1. **Install Python dependencies**
+## Project Structure
+
+```text
+Real-Time-ISL-Translator/
+│
+├── inference/
+│
+├── models/
+│
+├── notebooks/
+│
+├── scripts/
+│
+├── src/
+│
+├── web_app/
+│   ├── static/
+│   │   └── index.html
+│   │
+│   ├── app_ws.py
+│   └── model_def.py
+│
+├── .gitignore
+├── CHALLENGES_AND_FUTURE.md
+├── README.md
+├── WORKFLOW_DIAGRAM.md
+├── requirements.txt
+└── training_history.csv
+```
+
+## Requirements
+
+Before running the project, make sure the following are installed:
+
+* Python 3.9
+* Conda
+* Webcam
+* Required Python packages
+
+## Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Khushi-Keshari/Real-Time-ISL-Translator.git
+```
+
+### 2. Open the Project Directory
+
+```bash
+cd Real-Time-ISL-Translator
+```
+
+### 3. Create the Conda Environment
 
 ```bash
 conda create -n isl-speech python=3.9
+```
+
+### 4. Activate the Environment
+
+```bash
 conda activate isl-speech
+```
+
+### 5. Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-2. **Place models**
+## Model Files
 
-* YOLO weights (`yolo11n.pt`) in `models/`
-* Trained PyTorch model (`best_web_model.pth`) in `models/`
+The required model files should be available in the `models` directory.
 
-3. **Start the FastAPI server**
+Example:
+
+```text
+models/
+├── yolo11n.pt
+└── best_web_model.pth
+```
+
+* `yolo11n.pt` - YOLOv11 model weights
+* `best_web_model.pth` - trained CNN-LSTM model
+
+## Running the Project
+
+Start the FastAPI server:
 
 ```bash
 uvicorn web_app.app_ws:app --reload
 ```
 
-4. **Open the Web App**
+After starting the server, open the following address in your browser:
 
-* Navigate to `http://localhost:8000`
-* Click **Start Camera**
-* Use `s` to **start inference**, `r` to **reset buffer**
-
----
-
-##  **Controls**
-
-| Key                  | Action                                                             |
-| -------------------- | ------------------------------------------------------------------ |
-| `s`                  | Reset buffer and start inference                                   |
-| `r`                  | Reset buffer only                                                  |
-| **Play Translation** | Click the **Speak Translation** button to hear the translated sign |
-
----
-
-## 📂 **Project Structure**
-
-```
-web_app/
- ├── static/
- │    └── index.html         # Frontend HTML
- ├── app_ws.py               # FastAPI server with WebSocket
- ├── model_def.py            # PyTorch CNN + LSTM model definition
- └── models/
-       ├── yolo11n.pt
-       └── best_web_model.pth
+```text
+http://localhost:8000
 ```
 
----
+Allow the browser to access your webcam and start the camera.
 
-## 👥 **Credits**
+## Controls
 
-* **Sainava Modak**
-* **Kartik Rajput**
+| Control           | Function                               |
+| ----------------- | -------------------------------------- |
+| `s`               | Start/reset the prediction sequence    |
+| `r`               | Reset the sequence                     |
+| Speak Translation | Convert the predicted text into speech |
 
+## Model
 
+The project uses a CNN-LSTM based architecture.
 
+The CNN is used to extract features from the landmark data. The LSTM then processes the sequence of features and learns the temporal information from the sign.
 
-## **Acknowledgements**
+This is useful for sign language recognition because the movement of the hands and body over a number of frames can be important for identifying a sign.
 
-* [MediaPipe](https://github.com/google-ai-edge/mediapipe)
-* [Ultralytics YOLO](https://github.com/ultralytics/ultralytics)
-* [PyTorch](https://github.com/pytorch/pytorch)
+## Limitations
 
+The current system has some limitations:
 
+* Recognition may be affected by poor lighting.
+* Hand or body occlusion can affect landmark extraction.
+* Different users may perform the same sign differently.
+* Recognition is limited to the signs available in the training data.
+* Background and camera position can affect detection.
+* The system does not cover the complete Indian Sign Language vocabulary.
+
+## Future Improvements
+
+The project can be further improved by:
+
+* Increasing the number of supported ISL signs
+* Using a larger and more diverse dataset
+* Improving recognition accuracy
+* Supporting continuous sentence recognition
+* Improving real-time inference speed
+* Supporting multiple languages for speech output
+* Improving recognition under different lighting conditions
+* Handling partially visible hands and body parts more effectively
+* Deploying the application for easier access
+
+## Applications
+
+This project can be useful for:
+
+* Sign language learning
+* Accessibility applications
+* Communication assistance
+* Educational applications
+* Human-computer interaction
+* Sign language recognition research
+
+## Author
+
+[**Khushi Keshari**](https://github.com/Khushi-Keshari)
+
+## Acknowledgements
+
+This project uses the following open-source technologies:
+
+* [PyTorch](https://pytorch.org/)
+* [Ultralytics YOLO](https://www.ultralytics.com/)
+* [MediaPipe](https://mediapipe.dev/)
+* [FastAPI](https://fastapi.tiangolo.com/)
 
